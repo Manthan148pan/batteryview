@@ -1,0 +1,48 @@
+{
+  "rules": {
+    "users": {
+      "$uid": {
+        // Users can read and write their own data if they are authenticated
+        ".read": "auth != null && auth.uid === $uid",
+        ".write": "auth != null && auth.uid === $uid",
+        "linked_devices": {
+          "$deviceId": {
+            ".write": "auth != null && auth.uid === $uid",
+            // Validate the data being written to the new user device node
+            ".validate": "newData.hasChildren(['added_at', 'added_by', 'location']) && newData.child('added_by').isString() && newData.child('added_by').val() === auth.email"
+          }
+        },
+        "bms_devices": {
+          ".read": "auth != null && auth.uid === $uid",
+          "$mac": {
+            ".write": "auth != null && auth.uid === $uid",
+             "history": {
+                "$date": {
+                  "$timestamp": {
+                    // Ensure historical data contains at least hex_data.
+                    ".validate": "newData.hasChildren(['hex_data'])"
+                  }
+                }
+              }
+          }
+        },
+        "bms_scan_history": {
+            "$macId": {
+                ".indexOn": "timestamp"
+            }
+        }
+      }
+    },
+    "esp_devices": {
+      "$deviceId": {
+        // Any authenticated user can read the device list to find an unclaimed device
+        ".read": "auth != null",
+        // A user can write to a device's record IF:
+        // 1. They are authenticated.
+        // 2. The device they are trying to claim is currently "waiting_for_link".
+        // 3. The new data they are writing sets the status to "linked" and adds their own UID as owner.
+        ".write": "auth != null && data.child('status').val() === 'waiting_for_link' && newData.child('status').val() === 'linked' && newData.child('owner_uid').val() === auth.uid"
+      }
+    }
+  }
+}

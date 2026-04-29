@@ -1,0 +1,155 @@
+generator client {
+  provider = "prisma-client-js"
+  engineType = "library"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id             String    @id @default(uuid())
+  email          String    @unique
+  passwordHash   String?   // Optional if using NextAuth OAuth, required for credentials
+  name           String?
+  role           Role      @default(MANAGER)
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  // Subscription/Business Logic
+  tier              SubscriptionTier @default(BRONZE)
+  pricePerUnit      Float            @default(50.0)
+  currentPeriodEnd  DateTime?
+  
+  // Referral & Commission Tracking
+  referredById   String?
+  referredBy     User?     @relation("Referrals", fields: [referredById], references: [id])
+  referrals      User[]    @relation("Referrals")
+  
+  // Relations
+  gateways       Gateway[]
+  batteries      Battery[]
+  riders         Rider[]
+  invoices       Invoice[]
+}
+
+enum Role {
+  ADMIN
+  MANAGER
+  SUB_MANAGER
+}
+
+enum SubscriptionTier {
+  BRONZE
+  SILVER
+  GOLD
+  PLATINUM
+  DIAMOND
+  FLEET
+}
+
+// For the "Fleet Add-on" Rider login
+model Rider {
+  id        String   @id @default(uuid())
+  phone     String   @unique
+  name      String?
+  userId    String   // Fleet Company this rider belongs to
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  // A rider can be assigned to one battery/scooter at a time
+  battery   Battery?
+  
+  createdAt DateTime @default(now())
+}
+
+model Gateway {
+  id          String   @id // MAC Address / Unique ESP ID
+  name        String?
+  location    String?
+  status      String   @default("inactive")
+  
+  userId      String?
+  user        User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+  
+  lastSeen    DateTime @default(now())
+  
+  telemetries Telemetry[]
+}
+
+model Battery {
+  id          String   @id // Daly BMS MAC Address
+  assignedQR  String?  @unique
+  status      String   @default("active")
+  
+  // Ownership
+  userId      String?
+  user        User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+  
+  // Assignment
+  riderId     String?  @unique
+  rider       Rider?   @relation(fields: [riderId], references: [id], onDelete: SetNull)
+  
+  createdAt   DateTime @default(now())
+
+  telemetries Telemetry[]
+}
+
+model Telemetry {
+  id           String   @id @default(uuid())
+  batteryId    String
+  battery      Battery  @relation(fields: [batteryId], references: [id], onDelete: Cascade)
+  
+  gatewayId    String?
+  gateway      Gateway? @relation(fields: [gatewayId], references: [id], onDelete: SetNull)
+  
+  // The raw payload
+  hexData      String
+  
+  // We can pull these out for faster "Predictive Maintenance" queries
+  soc          Float?
+  totalVoltage Float?
+  current      Float?
+  cycles       Int?
+  maxTemp      Float?
+  location     String?  // Snapshotted location at time of capture
+  faultAlerts  String?  // JSON string or comma separated
+  
+  capturedAt   DateTime @default(now())
+
+  @@index([batteryId, capturedAt])
+  @@index([gatewayId, capturedAt])
+}
+
+model PromoCode {
+  id              String    @id @default(uuid())
+  code            String    @unique
+  discountPercent Float?    // e.g., 20.0 for 20% off
+  discountFlat    Float?    // e.g., 50.0 for ₹50 off
+  
+  isActive        Boolean   @default(true)
+  maxUses         Int?      // Null means unlimited uses
+  currentUses     Int       @default(0)
+  
+  expiresAt       DateTime?
+  createdAt       DateTime  @default(now())
+
+  invoices        Invoice[]
+}
+
+model Invoice {
+  id              String    @id @default(uuid())
+  userId          String
+  user            User      @relation(fields: [userId], references: [id])
+  
+  amountDue       Float
+  amountPaid      Float     @default(0)
+  
+  promoCodeId     String?
+  promoCode       PromoCode? @relation(fields: [promoCodeId], references: [id], onDelete: SetNull)
+  
+  status          String    @default("pending") // pending, paid, failed
+  billingPeriod   DateTime
+  
+  createdAt       DateTime  @default(now())
+}

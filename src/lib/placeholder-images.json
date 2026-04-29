@@ -1,0 +1,10 @@
+{
+  "placeholderImages": [
+    {
+      "id": "logo",
+      "description": "BatteryView logo",
+      "imageUrl": "/battery-view1.png",
+      "imageHint": "battery logo"
+    }
+  ]
+}

@@ -1,0 +1,74 @@
+
+{
+  "rules": {
+    "users": {
+      "$uid": {
+        // A user can read their own data, or a main user can read their sub-user's data.
+        ".read": "auth != null && (auth.uid === $uid || root.child('users').child(auth.uid).child('sub_users').child($uid).exists())",
+        // A user can only write to their own node.
+        ".write": "auth != null && auth.uid === $uid",
+        ".validate": "newData.hasChildren(['email', 'role', 'fullName'])",
+
+        "linked_devices": {
+          // Users can only manage their own linked devices.
+          ".read": "auth != null && auth.uid === $uid",
+          "$deviceId": {
+            ".write": "auth != null && auth.uid === $uid"
+          }
+        },
+
+        "bms_devices": {
+          // Users can only manage their own BMS devices.
+          ".read": "auth != null && auth.uid === $uid",
+          "$mac": {
+            ".write": "auth != null && auth.uid === $uid",
+            "history": {
+              "$date": {
+                "$timestamp": {
+                  // Ensure historical data contains at least hex_data.
+                  ".validate": "newData.hasChildren(['hex_data'])"
+                }
+              }
+            }
+          }
+        },
+        
+        "bms_scan_history": {
+            ".read": "auth != null && auth.uid === $uid",
+            "$macId": {
+                ".write": "auth != null && auth.uid === $uid",
+                ".indexOn": "timestamp"
+            }
+        },
+
+        "sub_users": {
+          // Main users can only manage their own sub-users list.
+          ".read": "auth != null && auth.uid === $uid",
+          "$subUid": {
+            ".write": "auth != null && auth.uid === $uid",
+            ".validate": "newData.hasChildren(['uid', 'email', 'role', 'permissions']) && newData.child('role').val() === 'sub_user' && newData.child('permissions').hasChildren(['canRegisterBms', 'canAddGateway', 'canViewHistory'])"
+          }
+        },
+        
+        "sessions": {
+          ".indexOn": "loginTime",
+          // Users can only manage their own sessions.
+          ".read": "auth != null && auth.uid === $uid",
+          "$sessionId": {
+            ".write": "auth != null && auth.uid === $uid",
+            ".validate": "newData.hasChildren(['loginTime']) && newData.child('loginTime').isString()"
+          }
+        }
+      }
+    },
+    "linked_devices": {
+      "$deviceId": {
+        // Any authenticated user can read device info (e.g. to check if claimed).
+        ".read": "auth != null",
+        // Write is only allowed if the user is the owner.
+        ".write": "auth != null && ((!data.exists() && newData.child('owner_uid').val() === auth.uid) || (data.child('owner_uid').val() === auth.uid))",
+        ".validate": "newData.hasChildren(['added_at', 'added_by', 'location', 'assigned_name', 'owner_uid'])"
+      }
+    }
+  }
+}
