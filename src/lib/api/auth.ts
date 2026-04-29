@@ -3,14 +3,12 @@
  */
 
 import { NextRequest } from 'next/server';
-import { getAuth } from 'firebase/auth';
-import * as admin from 'firebase-admin';
+import { initializeApp, getApps, cert } from 'firebase-admin/app';
+import { getAuth } from 'firebase-admin/auth';
 
 // Initialize Firebase Admin SDK if not already done
-let initialized = false;
-
 function initializeAdmin() {
-  if (admin.apps.length > 0) return;
+  if (getApps().length > 0) return;
 
   if (!process.env.FIREBASE_ADMIN_SDK_KEY) {
     console.error('FIREBASE_ADMIN_SDK_KEY not set. Backend auth will fail.');
@@ -18,10 +16,9 @@ function initializeAdmin() {
   }
 
   try {
-    admin.initializeApp({
-      credential: admin.credential.cert(
-        JSON.parse(process.env.FIREBASE_ADMIN_SDK_KEY)
-      ),
+    const serviceAccount = JSON.parse(process.env.FIREBASE_ADMIN_SDK_KEY);
+    initializeApp({
+      credential: cert(serviceAccount),
     });
   } catch (error) {
     console.error('Failed to initialize Firebase Admin SDK:', error);
@@ -44,7 +41,8 @@ export async function verifyToken(
     initializeAdmin();
 
     // Verify token with Firebase Admin SDK
-    const decodedToken = await admin.auth().verifyIdToken(token);
+    const auth = getAuth();
+    const decodedToken = await auth.verifyIdToken(token);
     return {
       uid: decodedToken.uid,
       email: decodedToken.email,

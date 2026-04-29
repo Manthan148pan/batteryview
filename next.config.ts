@@ -2,6 +2,7 @@ import type { NextConfig } from 'next';
 
 const nextConfig: NextConfig = {
   /* config options here */
+  serverExternalPackages: ['firebase-admin'],
   devIndicators: {
     allowedDevOrigins: [
       'https://6000-firebase-studio-1761821327150.cluster-zumahodzirciuujpqvsniawo3o.cloudworkstations.dev',
@@ -10,9 +11,6 @@ const nextConfig: NextConfig = {
   },
   typescript: {
     ignoreBuildErrors: true,
-  },
-  eslint: {
-    ignoreDuringBuilds: true,
   },
   images: {
     remotePatterns: [
