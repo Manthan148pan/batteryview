@@ -90,13 +90,11 @@ const weatherIcons: { [key: number]: React.ElementType } = {
 const PRIMARY_NAV = [
   { href: '/', label: 'Dashboard', icon: LayoutGrid, exact: true },
   { href: '/history', label: 'History', icon: History, exact: false },
-  { href: '/compare', label: 'Compare', icon: BarChart3, exact: false },
 ];
 
 const MOBILE_NAV = [
   { href: '/', label: 'Dashboard', icon: LayoutGrid },
   { href: '/history', label: 'History', icon: History },
-  { href: '/compare', label: 'Compare', icon: BarChart3 },
   { href: '/scan', label: 'Scan', icon: QrCode },
 ];
 
@@ -371,10 +369,7 @@ export default function Header({
                   <Button 
                     variant="ghost" 
                     size="icon" 
-                    className={cn(
-                      "rounded-full h-10 w-10 md:h-12 md:w-12 transition-all",
-                      alertsCount > 0 ? "hover:bg-destructive/10 shadow-[0_0_15px_rgba(239,68,68,0.2)]" : "hover:bg-primary/10"
-                    )}
+                    className="rounded-full h-10 w-10 md:h-12 md:w-12 hover:bg-muted"
                   >
                     <Bell className={cn(
                       "h-6 w-6 md:h-7 md:w-7 transition-colors", 
@@ -394,7 +389,7 @@ export default function Header({
               {/* ── USER PROFILE & MENU ──────────────────────────────────── */}
               {/* User Avatar - Always Visible */}
               <Link href="/users">
-                <Avatar className="h-10 w-10 md:h-13 md:w-13 ring-4 ring-primary/5 hover:ring-primary/20 transition-all cursor-pointer shadow-sm">
+                <Avatar className="h-10 w-10 md:h-13 md:w-13 cursor-pointer">
                   <AvatarImage src={user?.photoURL || ''} alt={user?.displayName || 'User'} />
                   <AvatarFallback className="bg-primary/10 text-primary text-xs font-semibold">
                     {initials}
@@ -565,7 +560,7 @@ export default function Header({
       {/* ── MOBILE BOTTOM NAV ─────────────────────────────────────────────── */}
       {user && (
         <nav className="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-card/95 backdrop-blur-md border-t shadow-[0_-4px_12px_rgba(0,0,0,0.05)]">
-          <div className="grid grid-cols-4 h-16 max-w-md mx-auto">
+          <div className="grid grid-cols-3 h-16 max-w-md mx-auto">
             {MOBILE_NAV.map(({ href, label, icon: Icon }) => {
               const active = pathname === href;
               return (

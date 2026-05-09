@@ -10,6 +10,14 @@ import { useToast } from '@/hooks/use-toast';
 import { ScanLine, Power, Timer, PlusCircle, Server, List, Globe, Clock, RefreshCw } from 'lucide-react';
 import BMSCard from './bms-card';
 import DetailsModal from './details-modal';
+import PredictiveMaintenance from './predictive-maintenance';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from '@/components/ui/dialog';
 import type { User } from 'firebase/auth';
 import Link from 'next/link';
 import { useAuth } from '@/hooks/use-auth';
@@ -58,6 +66,7 @@ export default function BMSDashboard({
   const [isScanning, setIsScanning] = useState(false);
   const [isConnectingAll, setIsConnectingAll] = useState(false);
   const [selectedDevice, setSelectedDevice] = useState<BMSDevice | null>(null);
+  const [predictingDevice, setPredictingDevice] = useState<BMSDevice | null>(null);
   const [isAutoScanning, setIsAutoScanning] = useState(false);
   const [autoScanStartTime, setAutoScanStartTime] = useState<number | null>(null);
   const [elapsedTime, setElapsedTime] = useState('');
@@ -541,6 +550,7 @@ export default function BMSDashboard({
                     isNew={isNew}
                     showNickname={true}
                     onDetailsClick={() => setSelectedDevice(device)}
+                    onPredictClick={() => setPredictingDevice(device)}
                     onConnectClick={() => handleConnect(device.id)}
                     isFirstCard={index === 0}
                     />
@@ -564,6 +574,23 @@ export default function BMSDashboard({
         onClose={() => setSelectedDevice(null)} 
         userId={user?.uid}
       />
+
+      <Dialog open={!!predictingDevice} onOpenChange={(open) => !open && setPredictingDevice(null)}>
+        <DialogContent className="sm:max-w-[500px]">
+          <DialogHeader>
+            <DialogTitle>AI Predictive Maintenance</DialogTitle>
+            <DialogDescription>
+              Predictive analysis for {predictingDevice?.deviceNickname || predictingDevice?.id}
+            </DialogDescription>
+          </DialogHeader>
+          {predictingDevice && (
+            <PredictiveMaintenance 
+              activeGateway={predictingDevice.gatewayId} 
+              deviceId={predictingDevice.id} 
+            />
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

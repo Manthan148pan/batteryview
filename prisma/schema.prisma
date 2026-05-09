@@ -74,6 +74,12 @@ model Gateway {
   
   lastSeen    DateTime @default(now())
   
+  // Real-time Control (Replaces Firebase bms_control)
+  isScanning       Boolean   @default(false)
+  autoScanEnabled  Boolean   @default(false)
+  scanInterval     Int       @default(60) // in minutes
+  connectAllRequest Boolean  @default(false)
+
   telemetries Telemetry[]
 }
 
@@ -91,6 +97,12 @@ model Battery {
   rider       Rider?   @relation(fields: [riderId], references: [id], onDelete: SetNull)
   
   createdAt   DateTime @default(now())
+
+  // Real-time Status (Replaces Firebase linked_devices)
+  lastHexData    String?   // The latest live status from BMS
+  lastSeen       DateTime? // Last time seen by any gateway
+  isAvailable    Boolean   @default(false) // Currently in range
+  connectRequest Boolean   @default(false) // Manual connect trigger
 
   telemetries Telemetry[]
 }

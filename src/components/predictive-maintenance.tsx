@@ -10,11 +10,12 @@ import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 
 interface PredictiveMaintenanceProps {
   activeGateway: string | null;
+  deviceId?: string;
 }
 
-export default function PredictiveMaintenance({ activeGateway }: PredictiveMaintenanceProps) {
+export default function PredictiveMaintenance({ activeGateway, deviceId }: PredictiveMaintenanceProps) {
   const [isLoading, setIsLoading] = useState(false);
-  const [prediction, setPrediction] = useState<{ healthScore: number; recommendation: string; explanation: string; } | null>(null);
+  const [prediction, setPrediction] = useState<{ healthScore: number; recommendation: string; explanation: string; deviceId?: string; } | null>(null);
   const [error, setError] = useState<string | null>(null);
   const { toast } = useToast();
 
@@ -56,7 +57,7 @@ export default function PredictiveMaintenance({ activeGateway }: PredictiveMaint
       <CardContent className="text-center">
         {!prediction && !error && (
             <p className="mb-4 text-sm text-muted-foreground">
-                Click the button to run the AI prediction for the active gateway.
+                Click the button to run the AI prediction {deviceId ? `for device ${deviceId}` : 'for the active gateway'}.
             </p>
         )}
         

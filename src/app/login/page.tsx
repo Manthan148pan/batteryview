@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/hooks/use-auth';
 import { useToast } from '@/hooks/use-toast';
@@ -22,59 +23,21 @@ import {
   Gauge,
   Phone,
   ArrowRight,
-  Smartphone
+  Smartphone,
+  QrCode
 } from 'lucide-react';
 import Link from 'next/link';
 
 export default function ModernLoginForm() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [phoneNumber, setPhoneNumber] = useState('');
-  const [otp, setOtp] = useState('');
-  const [showOTP, setShowOTP] = useState(false);
-  const [isRiderLogin, setIsRiderLogin] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const { loginWithAdmin, login, loginWithPhone, verifyOTP } = useAuth();
+  const { loginWithAdmin, login } = useAuth();
   const router = useRouter();
   const { toast: toastFn } = useToast();
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
-
-    // --- Rider Phone Login Logic ---
-    if (isRiderLogin) {
-      if (!showOTP) {
-        // Send OTP
-        try {
-          if (!phoneNumber.startsWith('+')) {
-            toastFn({ variant: 'destructive', title: 'Invalid Phone Number', description: 'Please include country code (e.g., +91)' });
-            setIsLoading(false);
-            return;
-          }
-          await loginWithPhone(phoneNumber, 'recaptcha-container');
-          setShowOTP(true);
-          toastFn({ title: 'OTP Sent', description: 'Check your mobile for the verification code.' });
-        } catch (error: any) {
-          console.error("Phone login failed:", error);
-          toastFn({ variant: 'destructive', title: 'Login Failed', description: error.message || 'Failed to send OTP.' });
-        } finally {
-          setIsLoading(false);
-        }
-      } else {
-        // Verify OTP
-        try {
-          await verifyOTP(otp);
-          toastFn({ title: 'Login Successful', description: 'Welcome back, Rider!' });
-          router.push('/scan');
-        } catch (error: any) {
-          console.error("OTP verification failed:", error);
-          toastFn({ variant: 'destructive', title: 'Verification Failed', description: 'Invalid OTP. Please try again.' });
-        } finally {
-          setIsLoading(false);
-        }
-      }
-      return;
-    }
 
     const normalizedEmail = email.trim().toLowerCase();
     // ... rest of email logic ...
@@ -193,126 +156,74 @@ export default function ModernLoginForm() {
       <div className="w-full lg:w-1/2 flex items-center justify-center p-6 
                       bg-gradient-to-br from-gray-100 to-gray-200 dark:from-gray-900 dark:to-gray-800 h-full">
 
-        <div className="w-full max-w-sm bg-white dark:bg-gray-800 rounded-[2rem] shadow-xl transition-all duration-300 border border-gray-200 dark:border-gray-700 p-8 
-                      max-h-[90vh] overflow-y-auto">
+        <div className="w-full max-w-sm flex flex-col items-center">
+          {/* Mobile Logo */}
+          <div className="lg:hidden mb-8 animate-in fade-in zoom-in duration-700">
+            <Image 
+              src="/battery-view1.png" 
+              alt="BatteryView Logo" 
+              width={200} 
+              height={60} 
+              className="w-auto h-12 object-contain"
+            />
+          </div>
+
+          <div className="w-full bg-white dark:bg-gray-800 rounded-[2rem] shadow-xl transition-all duration-300 border border-gray-200 dark:border-gray-700 p-8 
+                        max-h-[90vh] overflow-y-auto">
 
           <div className="text-center pt-2 pb-6">
             <h1 className="text-3xl font-bold tracking-tight text-gray-900 dark:text-gray-50 mb-1">
               Welcome Back!
             </h1>
             <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
-              Sign in to access your dashboard.
+              Sign in to your organization dashboard.
             </p>
           </div>
-
-          <div className="flex bg-gray-100 dark:bg-gray-900 p-1 rounded-xl mb-6">
-            <button
-              onClick={() => { setIsRiderLogin(false); setShowOTP(false); }}
-              className={`flex-1 py-2 text-sm font-medium rounded-lg transition-all ${!isRiderLogin ? 'bg-white dark:bg-gray-800 shadow-sm text-indigo-600' : 'text-gray-500'}`}
-            >
-              Company
-            </button>
-            <button
-              onClick={() => setIsRiderLogin(true)}
-              className={`flex-1 py-2 text-sm font-medium rounded-lg transition-all ${isRiderLogin ? 'bg-white dark:bg-gray-800 shadow-sm text-indigo-600' : 'text-gray-500'}`}
-            >
-              Rider
-            </button>
-          </div>
-
           <form onSubmit={handleLogin} className="space-y-6">
-            {!isRiderLogin ? (
-              <>
-                {/* Email Input */}
-                <div className="space-y-2">
-                  <Label htmlFor="email" className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                    Email
-                  </Label>
-                  <div className="relative">
-                    <UserRound className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 dark:text-gray-500" />
-                    <Input
-                      id="email"
-                      type="email"
-                      placeholder="your.email@example.com"
-                      required
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
-                      disabled={isLoading}
-                      className="pl-10 h-11 rounded-lg border-gray-300 dark:border-gray-700 focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-indigo-500 dark:focus-visible:ring-indigo-400 dark:bg-gray-50 dark:text-gray-900 text-gray-900"
-                    />
-                  </div>
+            <div className="space-y-4">
+              {/* Email Input */}
+              <div className="space-y-2">
+                <Label htmlFor="email" className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                  Email
+                </Label>
+                <div className="relative">
+                  <UserRound className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 dark:text-gray-500" />
+                  <Input
+                    id="email"
+                    type="email"
+                    placeholder="your.email@example.com"
+                    required
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    disabled={isLoading}
+                    className="pl-10 h-11 rounded-lg border-gray-300 dark:border-gray-700 focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-indigo-500 dark:focus-visible:ring-indigo-400 dark:bg-gray-50 dark:text-gray-900 text-gray-900"
+                  />
                 </div>
+              </div>
 
-                {/* Password Input */}
-                <div className="space-y-2">
-                  <Label htmlFor="password" className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                    Password
-                  </Label>
-                  <div className="relative">
-                    <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 dark:text-gray-500" />
-                    <Input
-                      id="password"
-                      type="password"
-                      placeholder="••••••••"
-                      required
-                      value={password}
-                      onChange={(e) => setPassword(e.target.value)}
-                      disabled={isLoading}
-                      className="pl-10 h-11 rounded-lg border-gray-300 dark:border-gray-700 focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-indigo-500 dark:focus-visible:ring-indigo-400 dark:bg-gray-50 dark:text-gray-900 text-gray-900"
-                    />
-                  </div>
-                  <Link href="/forgot-password" disabled={isLoading} className="block text-sm text-right text-purple-600 hover:text-purple-800 dark:text-purple-400 dark:hover:text-purple-300 transition-colors mt-1">
-                    Forgot password?
-                  </Link>
+              {/* Password Input */}
+              <div className="space-y-2">
+                <Label htmlFor="password" className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                  Password
+                </Label>
+                <div className="relative">
+                  <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 dark:text-gray-500" />
+                  <Input
+                    id="password"
+                    type="password"
+                    placeholder="••••••••"
+                    required
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    disabled={isLoading}
+                    className="pl-10 h-11 rounded-lg border-gray-300 dark:border-gray-700 focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-indigo-500 dark:focus-visible:ring-indigo-400 dark:bg-gray-50 dark:text-gray-900 text-gray-900"
+                  />
                 </div>
-              </>
-            ) : (
-              <>
-                {/* Phone Input */}
-                <div className="space-y-2">
-                  <Label htmlFor="phone" className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                    Mobile Number
-                  </Label>
-                  <div className="relative">
-                    <Smartphone className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 dark:text-gray-500" />
-                    <Input
-                      id="phone"
-                      type="tel"
-                      placeholder="+91 XXXXX XXXXX"
-                      required
-                      value={phoneNumber}
-                      onChange={(e) => setPhoneNumber(e.target.value)}
-                      disabled={isLoading || showOTP}
-                      className="pl-10 h-11 rounded-lg border-gray-300 dark:border-gray-700 focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-indigo-500 dark:focus-visible:ring-indigo-400 dark:bg-gray-50 dark:text-gray-900 text-gray-900"
-                    />
-                  </div>
-                </div>
-
-                {showOTP && (
-                  <div className="space-y-2 animate-in fade-in slide-in-from-top-2 duration-300">
-                    <Label htmlFor="otp" className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                      Verification Code
-                    </Label>
-                    <div className="relative">
-                      <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 dark:text-gray-500" />
-                      <Input
-                        id="otp"
-                        type="text"
-                        placeholder="6-digit code"
-                        required
-                        value={otp}
-                        onChange={(e) => setOtp(e.target.value)}
-                        disabled={isLoading}
-                        className="pl-10 h-11 rounded-lg border-gray-300 dark:border-gray-700 focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-indigo-500 dark:focus-visible:ring-indigo-400 dark:bg-gray-50 dark:text-gray-900 text-gray-900 text-center tracking-[0.5em] font-bold"
-                        maxLength={6}
-                      />
-                    </div>
-                  </div>
-                )}
-                
-                <div id="recaptcha-container"></div>
-              </>
-            )}
+                <Link href="/forgot-password" disabled={isLoading} className="block text-sm text-right text-purple-600 hover:text-purple-800 dark:text-purple-400 dark:hover:text-purple-300 transition-colors mt-1">
+                  Forgot password?
+                </Link>
+              </div>
+            </div>
 
             {/* Log In Button */}
             <Button
@@ -320,12 +231,32 @@ export default function ModernLoginForm() {
               className="w-full h-11 bg-gradient-to-r from-purple-600 to-indigo-600 text-white font-semibold rounded-lg shadow-md hover:from-purple-700 hover:to-indigo-700 transition-all duration-200 ease-in-out transform hover:-translate-y-0.5 focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-indigo-500 flex items-center justify-center"
               disabled={isLoading}
             >
-              {isLoading ? (isRiderLogin && !showOTP ? 'Sending OTP...' : 'Verifying...') : (
+              {isLoading ? 'Verifying...' : (
                 <>
                   <LogIn className="mr-2 h-4 w-4" /> 
-                  {isRiderLogin ? (showOTP ? 'Verify & Login' : 'Send OTP') : 'Log In'} 
+                  Log In
                 </>
               )}
+            </Button>
+
+            <div className="relative my-6">
+                <div className="absolute inset-0 flex items-center">
+                    <span className="w-full border-t"></span>
+                </div>
+                <div className="relative flex justify-center text-xs uppercase">
+                    <span className="bg-white dark:bg-gray-800 px-2 text-muted-foreground">Rider Access</span>
+                </div>
+            </div>
+
+            <Button
+                asChild
+                variant="outline"
+                className="w-full h-11 rounded-lg border-2 border-primary/20 text-primary bg-primary/5 hover:bg-primary/10 transition-colors flex items-center justify-center"
+            >
+                <Link href="/scan">
+                    <QrCode className="mr-2 h-4 w-4" />
+                    Scan Scooter to Ride
+                </Link>
             </Button>
 
             {/* Guide Button */}
@@ -347,6 +278,7 @@ export default function ModernLoginForm() {
               </Link>
             </p>
           </form>
+          </div>
         </div>
       </div>
     </div>

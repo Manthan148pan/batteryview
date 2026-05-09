@@ -12,7 +12,7 @@ import {
 } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Thermometer, Info, Power, Zap, BatteryCharging, PowerOff, WifiOff, Server } from 'lucide-react';
+import { Thermometer, Info, Power, Zap, BatteryCharging, PowerOff, WifiOff, Server, Wrench } from 'lucide-react';
 import MeterChart from './meter-chart';
 
 interface BMSCardProps {
@@ -20,6 +20,7 @@ interface BMSCardProps {
   showNickname: boolean;
   isNew: boolean;
   onDetailsClick: () => void;
+  onPredictClick: () => void;
   onConnectClick: () => void;
   isFirstCard?: boolean;
 }
@@ -29,6 +30,7 @@ export default function BMSCard({
   showNickname,
   isNew,
   onDetailsClick,
+  onPredictClick,
   onConnectClick,
   isFirstCard = false,
 }: BMSCardProps) {
@@ -45,8 +47,8 @@ export default function BMSCard({
   
 
   return (
-    <Card className="w-full md:w-[calc(50%-0.75rem)] flex-grow transform transition-all hover:shadow-xl hover:-translate-y-1" style={{minHeight: '300px'}}>
-      <CardHeader className="pb-2">
+    <Card className="w-full md:w-[calc(33.33%-1rem)] lg:w-[calc(25%-1rem)] flex-grow transform transition-all hover:shadow-lg hover:-translate-y-1" style={{minHeight: '280px'}}>
+      <CardHeader className="p-4 pb-2">
         <div className="flex justify-between items-start">
           <div className="flex items-center gap-2">
             {isNew && !device.available && (
@@ -61,7 +63,7 @@ export default function BMSCard({
                 <span className="relative inline-flex rounded-full h-3 w-3 bg-green-500"></span>
               </span>
             )}
-            <CardTitle className="text-xl font-bold text-gray-800 dark:text-gray-200">
+            <CardTitle className="text-lg font-bold text-gray-800 dark:text-gray-200">
               {displayTitle}
             </CardTitle>
           </div>
@@ -96,43 +98,54 @@ export default function BMSCard({
 
       {device.available ? (
         <>
-          <CardContent className="flex flex-col items-center gap-1 pt-1">
-            <MeterChart
-              value={soc}
-              max={100}
-              label="State of Charge"
-              unit="%"
-              color="hsl(var(--primary))"
-            />
-            <div className="w-full grid grid-cols-3 gap-2 text-center text-muted-foreground pt-1">
+          <CardContent className="flex flex-col items-center gap-1 p-4 pt-1">
+            <div className="scale-90 origin-top -mb-4">
+              <MeterChart
+                value={soc}
+                max={100}
+                label="SoC"
+                unit="%"
+                color="hsl(var(--primary))"
+              />
+            </div>
+            <div className="w-full grid grid-cols-3 gap-1 text-center text-muted-foreground pt-1">
               <div className="flex flex-col items-center">
-                <BatteryCharging className="w-5 h-5 mb-1 text-primary" />
-                <span className="font-bold text-lg text-foreground">{volt.toFixed(1)}V</span>
-                <span className="text-xs">Voltage</span>
+                <BatteryCharging className="w-4 h-4 mb-0.5 text-primary" />
+                <span className="font-bold text-base text-foreground">{volt.toFixed(1)}V</span>
+                <span className="text-[10px]">Voltage</span>
               </div>
               <div className="flex flex-col items-center">
-                <Zap className="w-5 h-5 mb-1 text-primary" />
-                <span className="font-bold text-lg text-foreground">{curr.toFixed(1)}A</span>
-                <span className="text-xs">Current</span>
+                <Zap className="w-4 h-4 mb-0.5 text-primary" />
+                <span className="font-bold text-base text-foreground">{curr.toFixed(1)}A</span>
+                <span className="text-[10px]">Current</span>
               </div>
               <div className="flex flex-col items-center">
-                <Thermometer className="w-5 h-5 mb-1 text-primary" />
-                <span className="font-bold text-lg text-foreground">{temp1.toFixed(1)}°C</span>
-                <span className="text-xs">Temp</span>
+                <Thermometer className="w-4 h-4 mb-0.5 text-primary" />
+                <span className="font-bold text-base text-foreground">{temp1.toFixed(1)}°C</span>
+                <span className="text-[10px]">Temp</span>
               </div>
             </div>
           </CardContent>
-          <CardFooter className="flex gap-4">
-            <Button id={isFirstCard ? 'details-button' : undefined} variant="outline" className="w-full" onClick={onDetailsClick} disabled={!decodedData}>
-              <Info className="mr-2" /> Details
+          <CardFooter className="p-4 pt-0 flex gap-2">
+            <Button size="sm" variant="outline" className="flex-1 h-9 gap-1.5" onClick={onDetailsClick} disabled={!decodedData} title="View Details">
+              <Info className="h-3.5 w-3.5" />
+              <span className="text-[10px] font-bold">Info</span>
+            </Button>
+            <Button size="sm" variant="outline" className="flex-1 h-9 gap-1.5" onClick={onPredictClick} title="AI Prediction">
+              <Wrench className="h-3.5 w-3.5" />
+              <span className="text-[10px] font-bold">AI</span>
             </Button>
             <Button
               id={isFirstCard ? 'connect-button' : undefined}
-              className="w-full gradient-bg text-primary-foreground hover:opacity-90 disabled:opacity-50"
+              size="sm"
+              className="flex-1 gradient-bg text-primary-foreground hover:opacity-90 disabled:opacity-50 h-9 gap-1.5"
               onClick={onConnectClick}
               disabled={device.connect || !device.available}
             >
-              <Power className="mr-2" /> {device.connect ? 'Connected' : 'Connect'}
+              <Power className="h-3.5 w-3.5" />
+              <span className="text-[10px] font-bold truncate">
+                {device.connect ? 'Linked' : 'Link'}
+              </span>
             </Button>
           </CardFooter>
         </>
@@ -145,18 +158,24 @@ export default function BMSCard({
                 No real-time data available.
             </p>
           </CardContent>
-           <CardFooter className="flex gap-4">
-             <Button variant="outline" className="w-full" onClick={onDetailsClick} disabled={true}>
-              <Info className="mr-2" /> Details
-            </Button>
-            <Button
-              className="w-full"
-              onClick={onConnectClick}
-              disabled={true}
-            >
-              <Power className="mr-2" /> Connect
-            </Button>
-          </CardFooter>
+            <CardFooter className="p-4 pt-0 flex gap-2">
+              <Button variant="outline" size="sm" className="flex-1 h-9 gap-1.5" disabled={true}>
+                <Info className="h-3.5 w-3.5" />
+                <span className="text-[10px] font-bold">Info</span>
+              </Button>
+              <Button variant="outline" size="sm" className="flex-1 h-9 gap-1.5" disabled={true}>
+                <Wrench className="h-3.5 w-3.5" />
+                <span className="text-[10px] font-bold">AI</span>
+              </Button>
+              <Button
+                className="flex-1 h-9 gap-1.5"
+                size="sm"
+                disabled={true}
+              >
+                <Power className="h-3.5 w-3.5" />
+                <span className="text-[10px] font-bold">Link</span>
+              </Button>
+            </CardFooter>
         </>
       )}
     </Card>

@@ -8,10 +8,10 @@ import {
   signOut,
   User,
   createUserWithEmailAndPassword,
-  sendEmailVerification,
   sendPasswordResetEmail,
   RecaptchaVerifier,
   signInWithPhoneNumber,
+  signInAnonymously,
   ConfirmationResult,
 } from 'firebase/auth';
 import { auth, db, ref, get, set, update, push } from '@/lib/firebase';
@@ -52,6 +52,7 @@ interface AuthContextType {
   sendPasswordReset: (email: string) => Promise<void>;
   loginWithPhone: (phoneNumber: string, reCaptchaId: string) => Promise<void>;
   verifyOTP: (otp: string) => Promise<any>;
+  loginAnonymously: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -98,8 +99,22 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           if (snapshot.exists()) {
             setUserProfile(snapshot.val());
           } else {
-            // Check if it's a phone user without a profile
-            if (firebaseUser.phoneNumber) {
+            // Check if it's a guest or phone user without a profile
+            if (firebaseUser.isAnonymous) {
+              const guestProfile: UserProfile = {
+                fullName: 'Guest Rider',
+                companyName: 'Anonymous',
+                mobileNumber: 'N/A',
+                designation: 'Rider',
+                role: 'sub_user',
+                permissions: {
+                  canRegisterBms: false,
+                  canAddGateway: false,
+                  canViewHistory: true
+                }
+              };
+              setUserProfile(guestProfile);
+            } else if (firebaseUser.phoneNumber) {
               const newProfile: UserProfile = {
                 fullName: 'Rider',
                 companyName: 'Individual',
@@ -290,6 +305,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
+  const loginAnonymously = async () => {
+    if (!auth) throw new Error("Firebase not initialized");
+    await signInAnonymously(auth);
+  };
+
   return (
     <AuthContext.Provider value={{ 
       user, 
@@ -305,7 +325,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       updateUserProfile, 
       sendPasswordReset,
       loginWithPhone,
-      verifyOTP
+      verifyOTP,
+      loginAnonymously
     }}>
       {children}
     </AuthContext.Provider>

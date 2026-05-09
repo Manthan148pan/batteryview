@@ -66,21 +66,33 @@ client.on('message', async (topic, message) => {
       },
     });
 
-    // 4. Ensure Gateway exists in DB (if provided)
+    // 4. Ensure Gateway exists in DB and update heartbeat
     let dbGateway = null;
     if (gateway) {
       dbGateway = await prisma.gateway.upsert({
         where: { id: gateway },
         update: { 
           lastSeen: new Date(),
-          location: gateway_location || undefined 
+          location: gateway_location || undefined,
+          status: 'active' 
         },
         create: {
           id: gateway,
           location: gateway_location || 'Unknown',
+          status: 'active'
         },
       });
     }
+
+    // 5. Update Battery Live Status
+    await prisma.battery.update({
+      where: { id: batteryMac },
+      data: {
+        lastHexData: hex_data,
+        lastSeen: new Date(),
+        isAvailable: true,
+      }
+    });
 
     // 5. Calculate Max Temp for History
     const maxTemp = Math.max(...decoded.temps, decoded.mosT1, decoded.mosT2);

@@ -12,7 +12,6 @@ import { Button } from '@/components/ui/button';
 import { getClientDatabase, ref, get, onValue, update, set } from '@/lib/firebase';
 import { ClaimedDevice, BMSDevice, RawBMSDevice } from '@/types/bms';
 import ActiveAlerts from '@/components/active-alerts';
-import PredictiveMaintenance from '@/components/predictive-maintenance';
 import { QrCode } from 'lucide-react';
 import { decodeBMSHex } from '@/lib/bms-decoder';
 import { detectFaults } from '@/lib/fault-detector';
@@ -341,36 +340,30 @@ export default function DashboardPage() {
             </div>
             <h2 className="text-3xl font-bold mb-4 tracking-tight">Ready to Ride?</h2>
             <p className="text-muted-foreground text-lg mb-8 max-w-sm">
-              Select your company and scooter, then scan your battery's QR code to begin.
+              Scan a scooter's QR code to instantly connect and start monitoring your ride.
             </p>
             <Button size="lg" asChild className="h-14 px-10 text-lg rounded-2xl gradient-bg shadow-lg hover:shadow-xl transition-all active:scale-95">
               <Link href="/scan">
-                <QrCode className="mr-3 h-6 w-6" /> Setup Ride
+                <QrCode className="mr-3 h-6 w-6" /> Start Scanning
               </Link>
             </Button>
           </div>
         ) : (
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            <div className="lg:col-span-2">
-              <BMSDashboard
-                user={user}
-                isAdmin={isAdmin}
-                activeGateway={activeGateway}
-                claimedDevices={claimedDevices}
-                devicesLoading={devicesLoading}
-                setActiveGateway={handleActiveGatewayChange}
-                bmsDevices={bmsDevices}
-                bmsDevicesLoading={bmsDevicesLoading}
-                scanInterval={scanInterval}
-                autoConnectInterval={autoConnectInterval}
-                totalRegisteredBms={totalRegisteredBmsCount}
-                activeGatewayIds={activeGatewayIds}
-              />
-            </div>
-            <div className="space-y-6">
-              {(isMainUser || isAdmin) && <PredictiveMaintenance activeGateway={activeGateway} />}
-              {/* Other sidebar components can go here */}
-            </div>
+          <div className="w-full">
+            <BMSDashboard
+              user={user}
+              isAdmin={isAdmin}
+              activeGateway={activeGateway}
+              claimedDevices={claimedDevices}
+              devicesLoading={devicesLoading}
+              setActiveGateway={handleActiveGatewayChange}
+              bmsDevices={bmsDevices}
+              bmsDevicesLoading={bmsDevicesLoading}
+              scanInterval={scanInterval}
+              autoConnectInterval={autoConnectInterval}
+              totalRegisteredBms={totalRegisteredBmsCount}
+              activeGatewayIds={activeGatewayIds}
+            />
           </div>
         )}
       </main>
